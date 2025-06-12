@@ -24,7 +24,7 @@ def decode_mongo_url_from_web(password: str, url: str) -> str:
 
 def get_remote_url_from_mongo():
     try:
-        password = os.getenv("PASS_KEY")
+        password = "mongodbMac02335!"
         secret_url = "https://raw.githubusercontent.com/7b809/the_keys/refs/heads/main/tokentext.txt"
         mongo_uri = decode_mongo_url_from_web(password, secret_url)
 
@@ -46,7 +46,7 @@ REMOTE_URL = get_remote_url_from_mongo() or "http://localhost:5000"  # fallback
 @app.route('/')
 def index():
     try:
-        response = requests.get(f'{REMOTE_URL}/home', timeout=10)
+        response = requests.get(f'{REMOTE_URL}/home')
         response.raise_for_status()
         json_data = response.json()
 
@@ -54,19 +54,13 @@ def index():
         ip = json_data.get('ip_address', 'N/A')
         data = json_data.get('data', [])
         random.shuffle(data)
-    except requests.exceptions.ConnectionError:
-        message = f"❌ Backend server at {REMOTE_URL} is not running or unreachable."
-        ip = "N/A"
-        data = []
-        print(message)
     except Exception as e:
-        message = f"❌ Error fetching data from backend: {e}"
+        message = "Failed to fetch data"
         ip = "N/A"
         data = []
-        print(message)
+        print(f"❌ Error: {e}")
 
-    return render_template("index.html", message=message, ip=ip, data=data, remote_url=REMOTE_URL)
-
+    return render_template("index.html", message=message, ip=ip, data=data,remote_url=REMOTE_URL)
 
 @app.route('/play_video_page')
 def play_video_page():
