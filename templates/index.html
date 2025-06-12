@@ -46,12 +46,22 @@
             margin: 20px;
             font-weight: bold;
         }
+
+        #searchInput {
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 
 <body>
     <h1>{{ message }}</h1>
     <p><strong>Server IP:</strong> {{ ip }}</p>
+
+    <input type="text" id="searchInput" placeholder="Search by title...">
 
     <div id="statusBox" class="status-box"></div>
     <div id="resultBox"></div>
@@ -61,20 +71,23 @@
 
     <script>
         const allData = {{ data | tojson | safe }};
+        let filteredData = [...allData];
+
         const grid = document.getElementById('gridContainer');
         const loading = document.getElementById('loading');
         const statusBox = document.getElementById('statusBox');
         const resultBox = document.getElementById('resultBox');
+        const searchInput = document.getElementById('searchInput');
 
         let start = 0;
         const limit = 100;
         let loadingMore = false;
 
         function renderItems() {
-            const end = Math.min(start + limit, allData.length);
+            const end = Math.min(start + limit, filteredData.length);
             for (let i = start; i < end; i++) {
-                const item = allData[i];
-                let titleSlug = item.href.split('/').filter(Boolean).pop(); // removes empty strings
+                const item = filteredData[i];
+                let titleSlug = item.href.split('/').filter(Boolean).pop();
 
                 const card = document.createElement('div');
                 card.className = 'card';
@@ -88,12 +101,14 @@
                 `;
                 grid.appendChild(card);
             }
+
             start += limit;
             loadingMore = false;
-            if (start >= allData.length) {
+            if (start >= filteredData.length) {
                 loading.style.display = 'none';
             }
         }
+
         function copyIP() {
             const ipText = document.getElementById('ipText').textContent;
             navigator.clipboard.writeText(ipText).then(() => {
@@ -115,23 +130,21 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log(data)
+                    console.log(data);
                     statusBox.className = 'status-box green';
                     statusBox.textContent = '🟢 Response received successfully!';
                     resultBox.innerHTML = `
-                            <p><strong>Video URL:</strong></p>
-<p>
-    <a href="${data.video_url}" target="_blank">${data.video_url}</a>
-</p>
-<p>
-    <strong>Server IP:</strong> 
-    <span id="ipText">${data.ip_address}</span>
-    <button onclick="copyIP()">📋 Copy</button>
-</p>
-
-                        `;
+                        <p><strong>Video URL:</strong></p>
+                        <p>
+                            <a href="${data.video_url}" target="_blank">${data.video_url}</a>
+                        </p>
+                        <p>
+                            <strong>Server IP:</strong>
+                            <span id="ipText">${data.ip_address}</span>
+                            <button onclick="copyIP()">📋 Copy</button>
+                        </p>
+                    `;
                 })
-
                 .catch(error => {
                     statusBox.className = 'status-box red';
                     statusBox.textContent = '❌ API request failed';
@@ -140,11 +153,22 @@
                 });
         }
 
+        // Infinite scroll
         window.addEventListener('scroll', () => {
             if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50 && !loadingMore) {
                 loadingMore = true;
-                setTimeout(renderItems, 200); // Slight delay for smoother feel
+                setTimeout(renderItems, 200);
             }
+        });
+
+        // Filter on search input
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase();
+            filteredData = allData.filter(item => item.title.toLowerCase().includes(query));
+            start = 0;
+            grid.innerHTML = '';
+            loading.style.display = filteredData.length > 0 ? 'block' : 'none';
+            renderItems();
         });
 
         // Initial render
