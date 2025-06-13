@@ -5,6 +5,18 @@
     <meta charset="UTF-8">
     <title>Video Grid</title>
     <style>
+        .message_box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -50,9 +62,15 @@
 </head>
 
 <body>
-    <h1>{{ message }}</h1>
-    <p><strong>Server IP:</strong> {{ ip }}</p>
-    <button onclick="clickAllCardButtons()">🎬 Click All Card Buttons</button>
+    <div class="message_box">
+        <h1>{{ message }}</h1>
+        <p><strong>Server IP:</strong> {{ ip }}</p>
+        <button onclick="clickAllCardButtons()">🎬 Click All Card Buttons</button>
+        <div id="loadMoreContainer" style="text-align:center; margin: 20px;">
+            <button id="loadMoreBtn" onclick="renderItems()">⬇️ Load More</button>
+        </div>
+
+    </div>
 
     <div id="statusBox" class="status-box"></div>
     <div id="resultBox"></div>
@@ -79,33 +97,32 @@
             const end = Math.min(start + limit, allData.length);
             for (let i = start; i < end; i++) {
                 const item = allData[i];
-                let titleSlug = item.href.split('/').filter(Boolean).pop(); // removes empty strings
+                let titleSlug = item.href.split('/').filter(Boolean).pop();
 
+                const resultId = `resultAnchor-${i}`;
                 const card = document.createElement('div');
                 card.className = 'card';
-
-                const resultId = `resultAnchor-${i}`; // unique ID per card
-
                 card.innerHTML = `
-                <img src="${item.img}" alt="Image">
-                <div class="card-title">
-                    <button onclick="fetchVideoData('${titleSlug}', '${resultId}')">
-                        ${item.title.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                    </button>
-                </div>
-                <div>
-                    <a id="${resultId}" target="_blank" style="display:none; color:blue;"></a>
-                </div>
-            `;
-
+            <img src="${item.img}" alt="Image">
+            <div class="card-title">
+                <button onclick="fetchVideoData('${titleSlug}', '${resultId}')">
+                    ${item.title.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                </button>
+            </div>
+            <div>
+                <a id="${resultId}" target="_blank" style="display:none; color:blue;"></a>
+            </div>
+        `;
                 grid.appendChild(card);
             }
+
             start += limit;
-            loadingMore = false;
             if (start >= allData.length) {
-                loading.style.display = 'none';
+                document.getElementById('loadMoreBtn').style.display = 'none';
             }
         }
+
+
         function copyIP() {
             const ipText = document.getElementById('ipText').textContent;
             navigator.clipboard.writeText(ipText).then(() => {
@@ -143,12 +160,12 @@
 
 
 
-        window.addEventListener('scroll', () => {
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50 && !loadingMore) {
-                loadingMore = true;
-                setTimeout(renderItems, 200); // Slight delay for smoother feel
-            }
-        });
+        // window.addEventListener('scroll', () => {
+        //     if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50 && !loadingMore) {
+        //         loadingMore = true;
+        //         setTimeout(renderItems, 200); // Slight delay for smoother feel
+        //     }
+        // });
 
         // Initial render
         renderItems();
