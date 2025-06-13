@@ -52,6 +52,7 @@
 <body>
     <h1>{{ message }}</h1>
     <p><strong>Server IP:</strong> {{ ip }}</p>
+    <button onclick="clickAllCardButtons()">🎬 Click All Card Buttons</button>
 
     <div id="statusBox" class="status-box"></div>
     <div id="resultBox"></div>
@@ -69,11 +70,14 @@
         let start = 0;
         const limit = 100;
         let loadingMore = false;
+        function clickAllCardButtons() {
+            const buttons = document.querySelectorAll('.card-title button');
+            buttons.forEach(btn => btn.click());
+        }
 
         function renderItems() {
             const end = Math.min(start + limit, allData.length);
-            for (let i = start; i < end; i++) 
-            {
+            for (let i = start; i < end; i++) {
                 const item = allData[i];
                 let titleSlug = item.href.split('/').filter(Boolean).pop(); // removes empty strings
 
